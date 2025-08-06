@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { Book } from "../lib/models";
+import { Book, Genres } from "../lib/models";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/layout";
 import { Alert, Button, Container, Divider, TextInput } from "@mantine/core";
@@ -19,19 +19,26 @@ export default function BookEditById() {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { data: book, isLoading, error } = useSWR<Book>(`/books/${bookId}`);
+  const { data: book, isLoading, error } = useSWR<Book>(`books/${bookId}`);
+  const { data: genres } = useSWR<Genres[]>(`genres`);
   const [isSetInitialValues, setIsSetInitialValues] = useState(false);
   const bookEditForm = useForm({
     initialValues: {
       title: "",
       author: "",
+      info: "",
+      summary: "",
       publishedAt: new Date(),
+      genres: ""
     },
 
     validate: {
       title: isNotEmpty("กรุณาระบุชื่อหนังสือ"),
       author: isNotEmpty("กรุณาระบุชื่อผู้แต่ง"),
+      info: isNotEmpty("กรุณาระบุรายละเอียดหนังสือ"),
+      summary: isNotEmpty("กรุณาระบุเรื่องย่อ"),
       publishedAt: isNotEmpty("กรุณาระบุวันที่พิมพ์หนังสือ"),
+      genres: isNotEmpty("กรุณาระบุหมวดหมู่"),
     },
   });
 
@@ -120,12 +127,18 @@ export default function BookEditById() {
       bookEditForm.setInitialValues({
         title: book.title,
         author: book.author,
+        info: book.info,
+        summary: book.summary,
         publishedAt: dayjs(book.publishedAt as unknown as number).toDate(),
+        genres: book.genres
       });
       bookEditForm.setValues({
         title: book.title,
         author: book.author,
+        info: book.info,
+        summary: book.summary,
         publishedAt: dayjs(book.publishedAt as unknown as number).toDate(),
+        genres: book.genres
       });
       setIsSetInitialValues(true);
     }
@@ -169,7 +182,23 @@ export default function BookEditById() {
                   {...bookEditForm.getInputProps("publishedAt")}
                 />
 
-                {/* TODO: เพิ่มรายละเอียดหนังสือ */}
+                <TextInput
+                  label="รายละเอียดหนังสือ"
+                  placeholder="รายละเอียดหนังสือ"
+                  {...bookEditForm.getInputProps("info")}
+                />
+                <TextInput
+                  label="เรื่องย่อ"
+                  placeholder="เรื่องย่อ"
+                  {...bookEditForm.getInputProps("summary")}
+                />
+                {book?.genresTitle?.split(',')?.map(g => g.trim())?.map((genre) => (
+                <TextInput
+                  label={`หมวดหมู่ ${genre}`}
+                  placeholder={`หมวดหมู่`}
+                  {...bookEditForm.getInputProps(`genres`)}
+                />
+                ))}
                 {/* TODO: เพิ่มเรื่องย่อ */}
                 {/* TODO: เพิ่มหมวดหมู่(s) */}
 

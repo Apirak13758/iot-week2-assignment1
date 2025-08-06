@@ -3,8 +3,17 @@ export interface Book {
   title: string;
   author: string;
   publishedAt: string;
+  info: string;
+  summary: string;
+  genres: string;
+  genresTitle: string;
 }
 export interface Owner{
   name: string;
-  user_id: number;
+  surname: string;
+  userId: number;
+}
+export interface Genres{
+  id: number;
+  title: string;
 }

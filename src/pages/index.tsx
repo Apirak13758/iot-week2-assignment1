@@ -43,9 +43,9 @@ export default function HomePage() {
         }}>
           ปัจจุบันค่าเฟ่ และห้องสมุดของเรา อยู่ในช่วงการดูแลของ
           {owners?.map((owner) => (
-          <u>
-            {owner.name} {owner.user_id}
-          </u>
+          <p>
+            | {owner.name} {owner.surname} {owner.userId} |
+          </p>
           ))}
           {/* TODO: ชื่อของตนเอง, รหัสประจำตัวนักศึกษา และแนะนำคาเฟ่นี้ต่ออีกสักหน่อย + ใส่รูปของตนเอง (ไม่จำเป็นหากไม่สะดวกใจใส่รูป) */}
           ซึ่งมีบริการ... Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto

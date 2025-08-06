@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Add this proxy configuration
       '/api': {
-        target: 'https://66070218iotweek1assignment1.vercel.app/',
+        target: 'http://localhost:3000/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
         secure: true, // Only for development with self-signed certs
