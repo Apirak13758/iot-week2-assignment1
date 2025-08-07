@@ -45,7 +45,7 @@ const router = createBrowserRouter([
 ]);
 
 const api = axios.create({
-  baseURL: import.meta.env.test
+  baseURL: import.meta.env.DEV
     ? '/api'  // Use proxy in development
     : import.meta.env.VITE_API_URL,  // Use direct URL in production
   headers: {
