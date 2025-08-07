@@ -38,13 +38,13 @@ export default function HomePage() {
           </div>
         </div>
         
-        <p className="text-right mt-8 " style={{
+        <div className="text-right mt-8 " style={{
           backgroundImage: `url(${cafeBackgroundImage})`,
         }}>
           ปัจจุบันค่าเฟ่ และห้องสมุดของเรา อยู่ในช่วงการดูแลของ
           {owners?.map((owner) => (
           <p>
-            | {owner.name} {owner.surname} {owner.userId} |
+            | {owner.name} {owner.surname} {owner.userId} |,
           </p>
           ))}
           {/* TODO: ชื่อของตนเอง, รหัสประจำตัวนักศึกษา และแนะนำคาเฟ่นี้ต่ออีกสักหน่อย + ใส่รูปของตนเอง (ไม่จำเป็นหากไม่สะดวกใจใส่รูป) */}
@@ -53,9 +53,9 @@ export default function HomePage() {
           Minus, mollitia? Vitae inventore odio quod ducimus similique, expedita sequi, reiciendis
           rem recusandae impedit voluptatibus quo veritatis ut quis et suscipit? Eligendi, neque!
           Earum quaerat unde similique totam. Pariatur!
-        </p>
+        </div>
         <div>
-            <img src={ajPanwitImage} alt="Panwit Tuwanut" className="h-full w-full object-cover" />
+            {/* <img src={ajPanwitImage} alt="Panwit Tuwanut" className="h-full w-full object-cover" /> */}
           </div>
         {!owners && !error && <Loading />}
           {error && (
