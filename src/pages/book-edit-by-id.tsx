@@ -2,13 +2,14 @@ import useSWR from "swr";
 import { Book, Genres } from "../lib/models";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/layout";
-import { Alert, Button, Container, Divider, TextInput } from "@mantine/core";
+import { Alert, Button, Container, Divider, TextInput, Checkbox } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import Loading from "../components/loading";
 import { IconAlertTriangleFilled, IconTrash } from "@tabler/icons-react";
 import { isNotEmpty, useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "../lib/axios";
+import { AxiosError } from "axios";
 import { notifications } from "@mantine/notifications";
 import { modals } from "@mantine/modals";
 import dayjs from "dayjs";
@@ -29,7 +30,7 @@ export default function BookEditById() {
       info: "",
       summary: "",
       publishedAt: new Date(),
-      genres: ""
+      genres: new Array() as string[], // Initialize as empty array
     },
 
     validate: {
@@ -38,14 +39,28 @@ export default function BookEditById() {
       info: isNotEmpty("กรุณาระบุรายละเอียดหนังสือ"),
       summary: isNotEmpty("กรุณาระบุเรื่องย่อ"),
       publishedAt: isNotEmpty("กรุณาระบุวันที่พิมพ์หนังสือ"),
-      genres: isNotEmpty("กรุณาระบุหมวดหมู่"),
     },
   });
 
   const handleSubmit = async (values: typeof bookEditForm.values) => {
     try {
       setIsProcessing(true);
-      await axios.patch(`/books/${bookId}`, values);
+      const { genres, ...bookData } = values;
+      await axios.patch(`/books/${bookId}`, bookData);
+      // Update bookGenres: remove all old, then add current
+    if (bookId) {
+      // 1. Get current genres from backend (optional, or just delete all)
+      await axios.delete(`/bookGenres/${bookId}/all`); // You may need to implement this endpoint, or loop through old genres if needed
+      
+      // 2. Add new genres
+      for (const genreId of genres) {
+        await axios.post(`/bookGenres`, {
+          bookId: Number(bookId),
+          genreId: Number(genreId),
+        });
+      }
+    }
+      // Show success notification
       notifications.show({
         title: "แก้ไขข้อมูลหนังสือสำเร็จ",
         message: "ข้อมูลหนังสือได้รับการแก้ไขเรียบร้อยแล้ว",
@@ -88,7 +103,13 @@ export default function BookEditById() {
   const handleDelete = async () => {
     try {
       setIsProcessing(true);
-      await axios.delete(`/books/${bookId}`);
+      // Delete all bookGenres for this book
+    if (bookId) {
+      // You may need to implement this endpoint, or loop through all genres
+      await axios.delete(`bookGenres/${bookId}/all`);
+    }
+    // Delete the book itself
+    await axios.delete(`books/${bookId}`);
       notifications.show({
         title: "ลบหนังสือสำเร็จ",
         message: "ลบหนังสือเล่มนี้ออกจากระบบเรียบร้อยแล้ว",
@@ -123,27 +144,44 @@ export default function BookEditById() {
   };
 
   useEffect(() => {
-    if (!isSetInitialValues && book) {
-      bookEditForm.setInitialValues({
-        title: book.title,
-        author: book.author,
-        info: book.info,
-        summary: book.summary,
-        publishedAt: dayjs(book.publishedAt as unknown as number).toDate(),
-        genres: book.genres
-      });
-      bookEditForm.setValues({
-        title: book.title,
-        author: book.author,
-        info: book.info,
-        summary: book.summary,
-        publishedAt: dayjs(book.publishedAt as unknown as number).toDate(),
-        genres: book.genres
-      });
-      setIsSetInitialValues(true);
-    }
-  }, [book, bookEditForm, isSetInitialValues]);
+  if (!isSetInitialValues && book) {
+    const genreString = typeof book.genres === "string" ? book.genres : "";
+    const genreArr = genreString ? genreString.split(",").map(g => g.trim()) : [];
+    bookEditForm.setInitialValues({
+      title: book.title,
+      author: book.author,
+      info: book.info,
+      summary: book.summary,
+      publishedAt: dayjs(book.publishedAt as unknown as number).toDate(),
+      genres: genreArr,
+    });
+    bookEditForm.setValues({
+      title: book.title,
+      author: book.author,
+      info: book.info,
+      summary: book.summary,
+      publishedAt: dayjs(book.publishedAt as unknown as number).toDate(),
+      genres: genreArr,
+    });
+    setIsSetInitialValues(true);
+  }
+}, [book, bookEditForm, isSetInitialValues]);
 
+
+  const handleGenreChange = (id: string) => {
+  // Always use getInputProps/get for Mantine form state
+  const currentGenres = bookEditForm.values.genres ?? [];
+  let newGenres: string[];
+  if (currentGenres.includes(id)) {
+    // Remove id from genres array
+    newGenres = currentGenres.filter(g => g !== id);
+  } else {
+    // Add id to genres array
+    newGenres = [...currentGenres, id];
+  }
+  bookEditForm.setFieldValue('genres', newGenres);
+};
+  //console.log(bookEditForm.values)
   return (
     <>
       <Layout>
@@ -192,13 +230,20 @@ export default function BookEditById() {
                   placeholder="เรื่องย่อ"
                   {...bookEditForm.getInputProps("summary")}
                 />
-                {book?.genresTitle?.split(',')?.map(g => g.trim())?.map((genre) => (
                 <TextInput
-                  label={`หมวดหมู่ ${genre}`}
-                  placeholder={`หมวดหมู่`}
+                  label={`หมวดหมู่`}
+                  placeholder={"id ของหมวดหมู่ที่เลือก เช่น 1,2,3"}
                   {...bookEditForm.getInputProps(`genres`)}
+                  disabled 
+                />
+                {genres?.map((genre) => (
+                <Checkbox
+                  label={`${genre.title}`}
+                  checked={bookEditForm.values.genres.includes(String(genre.id)) ?? false}
+                  onChange={() => handleGenreChange(String(genre.id))}
                 />
                 ))}
+                
                 {/* TODO: เพิ่มเรื่องย่อ */}
                 {/* TODO: เพิ่มหมวดหมู่(s) */}
 
