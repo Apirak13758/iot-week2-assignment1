@@ -53,12 +53,14 @@ export default function BookEditById() {
       await axios.delete(`/bookGenres/${bookId}/all`); // You may need to implement this endpoint, or loop through old genres if needed
       
       // 2. Add new genres
-      for (const genreId of genres) {
-        await axios.post(`/bookGenres`, {
-          bookId: Number(bookId),
-          genreId: Number(genreId),
-        });
-      }
+      if (Array.isArray(genresId) && genresId.length > 0) {
+          for (const Id of genresId) {
+            await axios.post(`/bookGenres`, {
+              bookId: Number(bookId),
+              genreId: Number(Id),
+            });
+          }
+        }
     }
       // Show success notification
       notifications.show({
